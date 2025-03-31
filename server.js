@@ -6,6 +6,7 @@ const app = express();
 const mongoose = require('mongoose');
 const cors = require('cors');
 const logger = require('morgan');
+const hootsRouter = require('./controllers/hoots');
 
 // Import routers
 const authRouter = require('./controllers/auth');
@@ -28,6 +29,7 @@ app.use(logger('dev'));
 app.use('/auth', authRouter);
 app.use('/test-jwt', testJwtRouter);
 app.use('/users', usersRouter);
+app.use('/hoots', hootsRouter);
 
 // Start the server and listen on port 3000
 app.listen(3000, () => {
