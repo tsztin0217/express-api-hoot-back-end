@@ -2,6 +2,7 @@ const express = require("express");
 const verifyToken = require("../middleware/verify-token.js");
 const Hoot = require("../models/hoot.js");
 const { findById } = require("../models/user.js");
+const { route } = require("./users.js");
 const router = express.Router();
 
 
@@ -54,7 +55,7 @@ router.put('/:hootId', verifyToken, async (req, res) => {
 
         // make sure request user and author is the same
         if (!hoot.author.equals(req.user._id)) {
-            res.status(403).send('You\'re not allowed to do that!');
+            return res.status(403).send('You\'re not allowed to do that!');
         }
         const updatedHoot = await Hoot.findByIdAndUpdate(
             req.params.hootId,
@@ -72,5 +73,21 @@ router.put('/:hootId', verifyToken, async (req, res) => {
     }
 })
 
+
+// DELETE /hoots/:hootId DELETE Route "Projected"
+router.delete('/:hootId', verifyToken, async (req, res) => {
+    try {
+        const hoot = await Hoot.findById(req.params.hootId);
+        if (!hoot.author.equals(req.user._id)) {
+            return res.status(403).send('You\'re not allowed to do that!')
+        }
+
+        const deletedHoot = await Hoot.findByIdAndDelete(req.params.hootId);
+        res.status(200).json(deletedHoot);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: error.message});
+    }
+})
 
 module.exports = router;
