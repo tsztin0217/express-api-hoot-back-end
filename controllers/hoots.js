@@ -1,8 +1,6 @@
 const express = require("express");
 const verifyToken = require("../middleware/verify-token.js");
 const Hoot = require("../models/hoot.js");
-const { findById } = require("../models/user.js");
-const { route } = require("./users.js");
 const router = express.Router();
 
 
@@ -39,7 +37,7 @@ router.get('/', verifyToken, async (req, res) => {
 router.get('/:hootId', verifyToken, async (req, res) => {
     try {
         const hoot = await Hoot.findById(req.params.hootId)
-            .populate('author');
+            .populate(['author', 'comments.author']);
         res.status(200).json(hoot);
     } catch (error) {
         console.log(error);
@@ -87,6 +85,25 @@ router.delete('/:hootId', verifyToken, async (req, res) => {
     } catch (error) {
         console.log(error);
         res.status(500).json({ error: error.message});
+    }
+});
+
+// POST /hoots/:hootId/comments CREATE comment "Protected"
+router.post('/:hootId/comments', verifyToken, async (req, res) => {
+    try {
+        req.body.author = req.user._id;
+        const hoot = await Hoot.findById(req.params.hootId);
+        hoot.comments.push(req.body);
+        await hoot.save();
+
+        // Find the newly created comment:
+        const newComment = hoot.comments[hoot.comments.length - 1] // get last (most recent) comment
+        newComment._doc.author = req.user; // add requesting user's details
+
+        res.status(201).json(newComment);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: error.message });
     }
 })
 
